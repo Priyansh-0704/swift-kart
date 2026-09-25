@@ -18,23 +18,16 @@ const generateToken = (user) => {
       role: user.role
     },
     process.env.JWT_SECRET,
-    {
-      expiresIn: "7d"
-    }
+    {expiresIn: "7d"}
   );
 };
 
 const createOtp = () => {
   const otp = crypto.randomInt(100000, 1000000).toString();
 
-  const otpHash = crypto
-    .createHash("sha256")
-    .update(otp)
-    .digest("hex");
+  const otpHash = crypto.createHash("sha256").update(otp).digest("hex");
 
-  const expiresAt = new Date(
-    Date.now() + 10 * 60 * 1000
-  );
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
   return {
     otp,

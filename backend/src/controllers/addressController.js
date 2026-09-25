@@ -30,10 +30,7 @@ const addAddress = async (req, res, next) => {
       country
     });
 
-    res.status(201).json({
-      message: "Address added successfully.",
-      address
-    });
+    res.status(201).json({ message: "Address added successfully.", address });
   } catch (error) {
     next(error);
   }
@@ -48,10 +45,8 @@ const getAddresses = async (req, res, next) => {
       order: [["id", "DESC"]]
     });
 
-    res.status(200).json({addresses});
-  } catch (error) {
-    next(error);
-  }
+    res.status(200).json({ addresses });
+  } catch (error) { next(error); }
 };
 
 const getAddressById = async (req, res, next) => {
@@ -64,10 +59,10 @@ const getAddressById = async (req, res, next) => {
     });
 
     if (!address) {
-      return next(new CustomError("Address not found.",404));
+      return next(new CustomError("Address not found.", 404));
     }
 
-    res.status(200).json({address});
+    res.status(200).json({ address });
   } catch (error) {
     next(error);
   }
@@ -83,7 +78,7 @@ const updateAddress = async (req, res, next) => {
     });
 
     if (!address) {
-      return next(new CustomError("Address not found.",404));
+      return next(new CustomError("Address not found.", 404));
     }
 
     const {
@@ -131,12 +126,12 @@ const deleteAddress = async (req, res, next) => {
     });
 
     if (!address) {
-      return next(new CustomError("Address not found.",404));
+      return next(new CustomError("Address not found.", 404));
     }
 
     await address.destroy();
 
-    res.status(200).json({message: "Address deleted successfully."});
+    res.status(200).json({ message: "Address deleted successfully." });
   } catch (error) {
     next(error);
   }
