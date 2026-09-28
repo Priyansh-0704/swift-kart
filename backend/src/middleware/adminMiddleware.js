@@ -2,7 +2,7 @@ const CustomError = require("../utils/customError");
 
 const adminMiddleware = (req, res, next) =>
 {
-    if(!req.uesr)
+    if(!req.user)
     {
         return next (
             new CustomError(

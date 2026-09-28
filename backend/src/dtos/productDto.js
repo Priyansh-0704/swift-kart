@@ -7,7 +7,7 @@ const productSchema = Joi.object({
     .trim()
     .required(),
 
-    desciption: Joi.string()
+    description: Joi.string()
     .min(2)
     .trim()
     .required(),

@@ -13,7 +13,9 @@ const {
     loginSchema,
     googleSchema,
     changePasswordSchema,
-    updateProfileSchema
+    updateProfileSchema,
+    requestSetPasswordOtpSchema,
+    setPasswordSchema
 } = require("../dtos/authDto");
 
 router.post("/register", validate(registerSchema), authController.register);
@@ -24,5 +26,8 @@ router.post("/google", validate(googleSchema), authController.googleAuth);
 router.get("/profile", authMiddleware, authController.getProfile);
 router.put("/profile", authMiddleware, validate(updateProfileSchema), authController.updateProfile);
 router.put("/change-password", authMiddleware, validate(changePasswordSchema), authController.changePassword);
+router.post("/request-set-password-otp", validate(requestSetPasswordOtpSchema), authController.requestSetPasswordOTP);
+router.post("/set-password", validate(setPasswordSchema), authController.setPassword);
+router.post("/link-google", authMiddleware, validate(googleSchema), authController.linkGoogle);
 
 module.exports = router;

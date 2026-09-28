@@ -78,6 +78,12 @@ const User = sequelize.define(
       field: "email_otp_attempts",
       defaultValue: 0,
       allowNull: false
+    },
+
+    emailOtpPurpose: {
+      type: DataTypes.ENUM("register", "set_password"),
+      field: "email_otp_purpose",
+      allowNull: true
     }
   },
   {
