@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const GOOGLE_CLIENT_ID =import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 function App() {
   const googleButtonRef = useRef(null);
@@ -14,18 +14,13 @@ function App() {
     try {
       setMessage("Signing in with Google...");
 
-      const result = await fetch(
-        `${API_URL}/google`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            idToken: response.credential
-          })
-        }
-      );
+      console.log("GOOGLE ID TOKEN:", response.credential);
+
+      const result = await fetch(`${API_URL}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken: response.credential })
+      });
 
       const data = await result.json();
 
@@ -34,15 +29,13 @@ function App() {
         return;
       }
 
-      localStorage.setItem("token",data.token);
+      localStorage.setItem("token", data.token);
+      console.log("SWIFTKART JWT:", data.token);
 
-      setMessage("Google login successful.");
-
+      setMessage(data.message);
       setProfile(data.user);
-    } catch (error) {
-      setMessage(
-        "Could not connect to the backend."
-      );
+    } catch {
+      setMessage("Could not connect to the backend.");
     }
   };
 
@@ -52,9 +45,7 @@ function App() {
     }
 
     const script = document.createElement("script");
-
-    script.src ="https://accounts.google.com/gsi/client";
-
+    script.src = "https://accounts.google.com/gsi/client";
     script.async = true;
     script.defer = true;
 
@@ -68,27 +59,23 @@ function App() {
         callback: handleGoogleLogin
       });
 
-      window.google.accounts.id.renderButton(
-        googleButtonRef.current,
-        {
-          theme: "outline",
-          size: "large",
-          text: "continue_with",
-          width: 280
-        }
-      );
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        text: "continue_with",
+        width: 280
+      });
 
       googleInitialized.current = true;
     };
 
     document.body.appendChild(script);
 
-    return () =>script.remove();
-   
+    return () => script.remove();
   }, []);
 
   const getProfile = async () => {
-    const token =localStorage.getItem("token");
+    const token = localStorage.getItem("token");
 
     if (!token) {
       setMessage("You are not logged in.");
@@ -96,14 +83,9 @@ function App() {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
-      );
+      const response = await fetch(`${API_URL}/auth/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
       const data = await response.json();
 
@@ -114,10 +96,8 @@ function App() {
 
       setProfile(data.user);
       setMessage("Profile loaded successfully.");
-    } catch (error) {
-      setMessage(
-        "Could not connect to the backend."
-      );
+    } catch {
+      setMessage("Could not connect to the backend.");
     }
   };
 
@@ -135,32 +115,19 @@ function App() {
   return (
     <div className="app">
       <h1>SwiftKart Authentication</h1>
-
-      <p>
-        Small frontend only for testing
-        authentication.
-      </p>
-
-      <div ref={googleButtonRef} style={{marginTop: "20px"}}/>
-
-      <div style={{marginTop: "20px"}}>
-        <button onClick={getProfile}>
-          Get Profile
-        </button>
-
-        <button onClick={logout} style={{ marginLeft: "10px"}}>
+      <p>Small frontend only for testing authentication.</p>
+      <div ref={googleButtonRef} style={{ marginTop: "20px" }} />
+      <div style={{ marginTop: "20px" }}>
+        <button onClick={getProfile}>Get Profile</button>
+        <button onClick={logout} style={{ marginLeft: "10px" }}>
           Logout
         </button>
       </div>
 
-      {message && (
-        <p>{message}</p>
-      )}
-
+      {message && <p>{message}</p>}
       {profile && (
         <div>
           <h2>User</h2>
-
           <p>
             Name: {profile.name}
             <br />
@@ -169,11 +136,18 @@ function App() {
             Username: {profile.username}
             <br />
             Role: {profile.role}
+            {profile.hasPassword !== undefined && (
+              <>
+                <br />
+                Has password: {profile.hasPassword ? "Yes" : "No"}
+                <br />
+                Google linked: {profile.googleLinked ? "Yes" : "No"}
+              </>
+            )}
           </p>
         </div>
       )}
     </div>
   );
 }
-
 export default App;

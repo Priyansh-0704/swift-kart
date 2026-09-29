@@ -1,20 +1,25 @@
 const Joi = require("joi");
 
+const email = Joi.string().email().lowercase().trim().max(100).required();
+
+const otp = Joi.string()
+  .length(6)
+  .pattern(/^\d+$/)
+  .required()
+  .messages({ "string.pattern.base": "OTP must contain only numbers." });
+
+const password = Joi.string().min(8).max(72).required();
+
 const registerSchema = Joi.object({
   name: Joi.string().min(2).max(25).trim().required(),
-  email: Joi.string().email().lowercase().trim().required(),
+  email,
   username: Joi.string().min(3).max(25).alphanum().lowercase().trim().required(),
-  password: Joi.string().min(8).required()
+  password
 });
 
-const verifyOtpSchema = Joi.object({
-  email: Joi.string().email().lowercase().trim().required(),
-  otp: Joi.string().length(6).pattern(/^\d+$/).required().messages({"string.pattern.base": "OTP must contain only numbers."})
-});
+const verifyOtpSchema = Joi.object({ email, otp });
 
-const resendOtpSchema = Joi.object({
-  email: Joi.string().email().lowercase().trim().required()
-});
+const resendOtpSchema = Joi.object({ email });
 
 const loginSchema = Joi.object({
   usernameOrEmail: Joi.string().trim().required(),
@@ -27,21 +32,16 @@ const googleSchema = Joi.object({
 
 const changePasswordSchema = Joi.object({
   currentPassword: Joi.string().required(),
-  newPassword: Joi.string().min(8).required()
+  newPassword: password
 });
 
 const updateProfileSchema = Joi.object({
   name: Joi.string().min(2).max(25).trim().required()
 });
 
-const requestSetPasswordOtpSchema = Joi.object({
-  email: Joi.string().email().lowercase().trim().required()
-});
-
 const setPasswordSchema = Joi.object({
-  email: Joi.string().email().lowercase().trim().required(),
-  otp: Joi.string().length(6).pattern(/^\d+$/).required(),
-  newPassword: Joi.string().min(8).required()
+  otp,
+  newPassword: password
 });
 
 module.exports = {
@@ -52,6 +52,5 @@ module.exports = {
   googleSchema,
   changePasswordSchema,
   updateProfileSchema,
-  requestSetPasswordOtpSchema,
   setPasswordSchema
 };

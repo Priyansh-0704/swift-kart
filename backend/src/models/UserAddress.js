@@ -46,7 +46,7 @@ const UserAddress = sequelize.define(
         addressLine2: {
             type: DataTypes.STRING(100),
             field: "address_line2",
-            allowNull: false
+            allowNull: true
         },
 
         landmark: {
@@ -55,12 +55,12 @@ const UserAddress = sequelize.define(
         },
 
         city: {
-            type: DataTypes.STRING(20),
+            type: DataTypes.STRING(50),
             allowNull: false
         },
 
         state: {
-            type: DataTypes.STRING(20),
+            type: DataTypes.STRING(50),
             allowNull: false
         },
 

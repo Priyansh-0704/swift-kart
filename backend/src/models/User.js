@@ -40,11 +40,16 @@ const User = sequelize.define(
       allowNull: false
     },
 
-    authType: {
-      type: DataTypes.ENUM("local", "google"),
-      field: "auth_type",
-      defaultValue: "local",
+    status: {
+      type: DataTypes.ENUM("Active", "Banned"),
+      defaultValue: "Active",
       allowNull: false
+    },
+
+    banReason: {
+      type: DataTypes.STRING(255),
+      field: "ban_reason",
+      allowNull: true
     },
 
     isVerified: {

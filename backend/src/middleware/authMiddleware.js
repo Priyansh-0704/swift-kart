@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/User");
 const CustomError = require("../utils/customError");
 
-const authMiddleware = (req, res, next) => {
+const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -11,7 +12,20 @@ const authMiddleware = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+
+    const user = await User.findByPk(decoded.id, {
+      attributes: ["id", "username", "role", "status"]
+    });
+
+    if (!user) {
+      return next(new CustomError("Invalid or expired token.", 401));
+    }
+
+    if (user.status === "Banned") {
+      return next(new CustomError("This account has been banned.", 403));
+    }
+
+    req.user = { id: user.id, username: user.username, role: user.role };
 
     next();
   } catch (error) {

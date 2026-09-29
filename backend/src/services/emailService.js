@@ -8,14 +8,14 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const sendOtpEmail = async (toEmail, otp) => {
+const sendOtpEmail = async (toEmail, otp, purpose = "Email Verification") => {
   const mailOptions = {
     from: `"SwiftKart" <${process.env.MAIL_USER}>`,
     to: toEmail,
-    subject: "SwiftKart Email Verification",
+    subject: `SwiftKart ${purpose}`,
     html: `
       <div style="font-family: Arial, sans-serif;">
-        <h2>SwiftKart Email Verification</h2>
+        <h2>SwiftKart ${purpose}</h2>
         <p>Your verification code is:</p>
         <h1>${otp}</h1>
         <p>This code will expire in 10 minutes.</p>
@@ -24,6 +24,7 @@ const sendOtpEmail = async (toEmail, otp) => {
       </div>
     `
   };
+
   await transporter.sendMail(mailOptions);
 };
 
