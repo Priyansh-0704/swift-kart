@@ -39,7 +39,12 @@ const updateProfileSchema = Joi.object({
   name: Joi.string().min(2).max(25).trim().required()
 });
 
-const setPasswordSchema = Joi.object({
+const forgotPasswordRequestSchema = Joi.object({
+  usernameOrEmail: Joi.string().trim().required()
+});
+
+const forgotPasswordResetSchema = Joi.object({
+  usernameOrEmail: Joi.string().trim().required(),
   otp,
   newPassword: password
 });
@@ -52,5 +57,6 @@ module.exports = {
   googleSchema,
   changePasswordSchema,
   updateProfileSchema,
-  setPasswordSchema
+  forgotPasswordRequestSchema,
+  forgotPasswordResetSchema
 };

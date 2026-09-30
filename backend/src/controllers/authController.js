@@ -18,6 +18,16 @@ const bannedResponse = (res, user) => {
   });
 };
 
+const findByUsernameOrEmail = async (usernameOrEmail) => {
+  const value = usernameOrEmail.toLowerCase();
+
+  return User.findOne({
+    where: {
+      [Op.or]: [{ email: value }, { username: value }]
+    }
+  });
+};
+
 const register = async (req, res, next) => {
   try {
     const { name, email, username, password } = req.body;
@@ -129,13 +139,8 @@ const verifyOtp = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const { usernameOrEmail, password } = req.body;
-    const loginValue = usernameOrEmail.toLowerCase();
 
-    const user = await User.findOne({
-      where: {
-        [Op.or]: [{ email: loginValue }, { username: loginValue }]
-      }
-    });
+    const user = await findByUsernameOrEmail(usernameOrEmail);
 
     if (!user) {
       return next(new CustomError("Invalid login credentials.", 401));
@@ -146,7 +151,7 @@ const login = async (req, res, next) => {
         status: "error",
         code: "PASSWORD_NOT_SET",
         message:
-          "This account was created with Google. Please log in with Google, then set a password from your profile."
+          "This account has no password yet. Use \"Forgot password\" to set one, or log in with Google."
       });
     }
 
@@ -230,18 +235,22 @@ const googleAuth = async (req, res, next) => {
   }
 };
 
-const requestSetPasswordOTP = async (req, res, next) => {
+const requestPasswordResetOtp = async (req, res, next) => {
   try {
-    const user = await User.findByPk(req.user.id);
+    const { usernameOrEmail } = req.body;
+
+    const user = await findByUsernameOrEmail(usernameOrEmail);
 
     if (!user) {
-      return next(new CustomError("User not found.", 404));
+      return next(new CustomError("No account found with these details.", 404));
     }
 
-    if (user.passwordHash) {
-      return next(
-        new CustomError("This account already has a password. Use change password instead.", 400)
-      );
+    if (user.status === "Banned") {
+      return bannedResponse(res, user);
+    }
+
+    if (!user.isVerified) {
+      return next(new CustomError("Please verify your email first by completing registration.", 400));
     }
 
     checkOtpCooldown(user);
@@ -251,33 +260,31 @@ const requestSetPasswordOTP = async (req, res, next) => {
     await user.save();
 
     try {
-      await sendOtpEmail(user.email, otp, "Password Setup");
+      await sendOtpEmail(user.email, otp, "Password Reset");
     } catch (error) {
       clearOtp(user);
       await user.save();
       return next(new CustomError("Unable to send verification email.", 500));
     }
 
-    res.status(200).json({ message: "A password setup OTP has been sent to your email." });
+    res.status(200).json({ message: "A password reset OTP has been sent to your email." });
   } catch (error) {
     next(error);
   }
 };
 
-const setPassword = async (req, res, next) => {
+const resetPassword = async (req, res, next) => {
   try {
-    const { otp, newPassword } = req.body;
+    const { usernameOrEmail, otp, newPassword } = req.body;
 
-    const user = await User.findByPk(req.user.id);
+    const user = await findByUsernameOrEmail(usernameOrEmail);
 
     if (!user) {
-      return next(new CustomError("User not found.", 404));
+      return next(new CustomError("No account found with these details.", 404));
     }
 
-    if (user.passwordHash) {
-      return next(
-        new CustomError("This account already has a password. Use change password instead.", 400)
-      );
+    if (user.status === "Banned") {
+      return bannedResponse(res, user);
     }
 
     await checkOtp(user, otp, "set_password");
@@ -286,9 +293,7 @@ const setPassword = async (req, res, next) => {
     clearOtp(user);
     await user.save();
 
-    res.status(200).json({
-      message: "Password created successfully. You can now log in with Google or your password."
-    });
+    sendAuthResponse(res, user, "Password set successfully.");
   } catch (error) {
     next(error);
   }
@@ -306,7 +311,7 @@ const changePassword = async (req, res, next) => {
 
     if (!user.passwordHash) {
       return next(
-        new CustomError("No password is set for this account. Please set a password first.", 400)
+        new CustomError("No password is set for this account. Use forgot-password to set one first.", 400)
       );
     }
 
@@ -378,8 +383,8 @@ module.exports = {
   verifyOtp,
   login,
   googleAuth,
-  requestSetPasswordOTP,
-  setPassword,
+  requestPasswordResetOtp,
+  resetPassword,
   changePassword,
   getProfile,
   updateProfile

@@ -24,6 +24,7 @@
     "nodemailer": "^9.0.5",
     "pg": "^8.23.0",
     "pg-hstore": "^2.3.4",
+    "razorpay": "^2.9.8",
     "sequelize": "^6.37.8",
     "streamifier": "^0.1.1"
   },
