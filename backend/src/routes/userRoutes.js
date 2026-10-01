@@ -13,8 +13,8 @@ const { banSchema } = require("../dtos/userDto");
 router.use(authMiddleware, adminMiddleware);
 
 router.get("/", userController.getUsers);
-router.get("/:id", validateId, userController.getUserById);
-router.patch("/:id/ban", validateId, validate(banSchema), userController.banUser);
-router.patch("/:id/unban", validateId, userController.unbanUser);
+router.get("/:id", validateId(), userController.getUserById);
+router.patch("/:id/ban", validateId(), validate(banSchema), userController.banUser);
+router.patch("/:id/unban", validateId(), userController.unbanUser);
 
 module.exports = router;

@@ -13,8 +13,8 @@ router.use(authMiddleware);
 
 router.post("/", validate(addressSchema), addressController.addAddress);
 router.get("/", addressController.getAddresses);
-router.get("/:id", validateId, addressController.getAddressById);
-router.put("/:id", validateId, validate(addressSchema), addressController.updateAddress);
-router.delete("/:id", validateId, addressController.deleteAddress);
+router.get("/:id", validateId(), addressController.getAddressById);
+router.put("/:id", validateId(), validate(addressSchema), addressController.updateAddress);
+router.delete("/:id", validateId(), addressController.deleteAddress);
 
 module.exports = router;
