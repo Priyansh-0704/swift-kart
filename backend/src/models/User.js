@@ -66,6 +66,26 @@ const User = sequelize.define(
       unique: true
     },
 
+    tokenVersion: {
+      type: DataTypes.INTEGER,
+      field: "token_version",
+      defaultValue: 0,
+      allowNull: false
+    },
+
+    passwordResetCount: {
+      type: DataTypes.INTEGER,
+      field: "password_reset_count",
+      defaultValue: 0,
+      allowNull: false
+    },
+
+    passwordResetWindowStart: {
+      type: DataTypes.DATE,
+      field: "password_reset_window_start",
+      allowNull: true
+    },
+
     emailOtpHash: {
       type: DataTypes.STRING(255),
       field: "email_otp_hash",

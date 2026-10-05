@@ -54,7 +54,8 @@ const Order = sequelize.define(
   },
   {
     tableName: "orders",
-    timestamps: false
+    timestamps: false,
+    indexes: [{ fields: ["user_id"] }, { fields: ["status"] }]
   }
 );
 

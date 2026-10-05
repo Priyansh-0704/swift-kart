@@ -14,10 +14,14 @@ const authMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const user = await User.findByPk(decoded.id, {
-      attributes: ["id", "username", "role", "status"]
+      attributes: ["id", "username", "role", "status", "tokenVersion"]
     });
 
     if (!user) {
+      return next(new CustomError("Invalid or expired token.", 401));
+    }
+
+    if (decoded.tokenVersion !== user.tokenVersion) {
       return next(new CustomError("Invalid or expired token.", 401));
     }
 

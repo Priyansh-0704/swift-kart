@@ -28,4 +28,21 @@ const sendOtpEmail = async (toEmail, otp, purpose = "Email Verification") => {
   await transporter.sendMail(mailOptions);
 };
 
-module.exports = { sendOtpEmail };
+const sendPasswordChangedAlert = async (toEmail) => {
+  const mailOptions = {
+    from: `"SwiftKart" <${process.env.MAIL_USER}>`,
+    to: toEmail,
+    subject: "Your SwiftKart password was changed",
+    html: `
+      <div style="font-family: Arial, sans-serif;">
+        <h2>Password changed</h2>
+        <p>The password on your SwiftKart account was just changed or reset.</p>
+        <p>If this was you, no action is needed. If this wasn't you, please contact support right away.</p>
+      </div>
+    `
+  };
+
+  await transporter.sendMail(mailOptions);
+};
+
+module.exports = { sendOtpEmail, sendPasswordChangedAlert };
