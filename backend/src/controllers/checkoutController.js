@@ -82,6 +82,26 @@ const verifyAndPlaceOrder = async (req, res, next) => {
       return next(new CustomError("Payment verification failed.", 400));
     }
 
+    const { Op } = require("sequelize");
+    const existingOrder = await Order.findOne({
+      where: {
+        [Op.or]: [{ razorpayPaymentId }, { razorpayOrderId }]
+      },
+      include: [
+        {
+          model: OrderItem,
+          include: [{ model: Product, attributes: ["id", "name", "imageUrl"] }]
+        }
+      ]
+    });
+
+    if (existingOrder) {
+      return res.status(200).json({
+        message: "Order has already been processed.",
+        order: existingOrder
+      });
+    }
+
     const address = await UserAddress.findOne({ where: { id: addressId, userId: req.user.id } });
 
     if (!address) {
@@ -96,6 +116,7 @@ const verifyAndPlaceOrder = async (req, res, next) => {
           userId: req.user.id,
           cost: total,
           status: "Pending",
+          paymentStatus: "Paid",
           shippingAddress: formatAddress(address),
           razorpayOrderId,
           razorpayPaymentId

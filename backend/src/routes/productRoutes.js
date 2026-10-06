@@ -33,7 +33,6 @@ router.put(
   productController.updateProduct
 );
 
-router.delete("/:id", authMiddleware, adminMiddleware, validateId(), productController.deleteProduct);
 router.patch("/:id/availability", authMiddleware, adminMiddleware, validateId(), productController.toggleAvailability);
 
 module.exports = router;

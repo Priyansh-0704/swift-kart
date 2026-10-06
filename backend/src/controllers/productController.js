@@ -82,6 +82,7 @@ const getProductById = async (req, res, next) => {
 };
 
 const createProduct = async (req, res, next) => {
+  let imagePublicId = null;
   try {
     const { name, description, price, discount } = req.body;
 
@@ -90,7 +91,6 @@ const createProduct = async (req, res, next) => {
     }
 
     let imageUrl = null;
-    let imagePublicId = null;
 
     if (req.file) {
       const uploaded = await uploadImage(req.file.buffer);
@@ -98,24 +98,36 @@ const createProduct = async (req, res, next) => {
       imagePublicId = uploaded.publicId;
     }
 
-    const product = await Product.create({
-      name,
-      description,
-      price,
-      imageUrl,
-      imagePublicId,
-      discount,
-      finalPrice: calculateFinalPrice(price, discount),
-      status: "Available"
-    });
+    try {
+      const product = await Product.create({
+        name,
+        description,
+        price,
+        imageUrl,
+        imagePublicId,
+        discount,
+        finalPrice: calculateFinalPrice(price, discount),
+        status: "Available"
+      });
 
-    res.status(201).json({ message: "Product created successfully.", product });
+      res.status(201).json({ message: "Product created successfully.", product });
+    } catch (dbError) {
+      if (imagePublicId) {
+        try {
+          await deleteImage(imagePublicId);
+        } catch (cleanupErr) {
+          console.error("Failed to cleanup Cloudinary image after create failure:", cleanupErr);
+        }
+      }
+      throw dbError;
+    }
   } catch (error) {
     next(error);
   }
 };
 
 const updateProduct = async (req, res, next) => {
+  let newPublicId = null;
   try {
     const productId = Number(req.params.id);
     const product = await findProduct(productId);
@@ -126,16 +138,13 @@ const updateProduct = async (req, res, next) => {
       return next(new CustomError("Product name already exists.", 400));
     }
 
+    const oldPublicId = product.imagePublicId;
+
     if (req.file) {
       const uploaded = await uploadImage(req.file.buffer);
-      const oldPublicId = product.imagePublicId;
-
       product.imageUrl = uploaded.url;
       product.imagePublicId = uploaded.publicId;
-
-      if (oldPublicId) {
-        await deleteImage(oldPublicId);
-      }
+      newPublicId = uploaded.publicId;
     }
 
     product.name = name;
@@ -144,26 +153,28 @@ const updateProduct = async (req, res, next) => {
     product.discount = discount;
     product.finalPrice = calculateFinalPrice(price, discount);
 
-    await product.save();
-
-    res.status(200).json({ message: "Product updated successfully.", product });
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deleteProduct = async (req, res, next) => {
-  try {
-    const product = await findProduct(Number(req.params.id));
-    const publicId = product.imagePublicId;
-
-    await product.destroy();
-
-    if (publicId) {
-      await deleteImage(publicId);
+    try {
+      await product.save();
+    } catch (saveError) {
+      if (newPublicId) {
+        try {
+          await deleteImage(newPublicId);
+        } catch (cleanupErr) {
+          console.error("Failed to cleanup new Cloudinary image after update failure:", cleanupErr);
+        }
+      }
+      throw saveError;
     }
 
-    res.status(200).json({ message: "Product deleted successfully." });
+    if (newPublicId && oldPublicId) {
+      try {
+        await deleteImage(oldPublicId);
+      } catch (err) {
+        console.error("Failed to delete old image from Cloudinary:", err);
+      }
+    }
+
+    res.status(200).json({ message: "Product updated successfully.", product });
   } catch (error) {
     next(error);
   }
@@ -190,6 +201,5 @@ module.exports = {
   getProductById,
   createProduct,
   updateProduct,
-  deleteProduct,
   toggleAvailability
 };

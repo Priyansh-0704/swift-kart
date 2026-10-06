@@ -3,6 +3,18 @@ const CustomError = require("../utils/customError");
 
 const PUBLIC_ATTRS = ["id", "name", "email", "username", "role", "status", "banReason", "isVerified", "googleId"];
 
+const formatAdminUser = (user) => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  username: user.username,
+  role: user.role,
+  status: user.status,
+  banReason: user.banReason,
+  isVerified: user.isVerified,
+  googleLinked: Boolean(user.googleId)
+});
+
 const getUsers = async (req, res, next) => {
   try {
     const page = req.query.page ? Number(req.query.page) : 1;
@@ -41,7 +53,7 @@ const getUsers = async (req, res, next) => {
     });
 
     res.status(200).json({
-      users: rows,
+      users: rows.map(formatAdminUser),
       pagination: {
         currentPage: page,
         limit,
@@ -62,7 +74,7 @@ const getUserById = async (req, res, next) => {
       return next(new CustomError("User not found.", 404));
     }
 
-    res.status(200).json({ user });
+    res.status(200).json({ user: formatAdminUser(user) });
   } catch (error) {
     next(error);
   }
@@ -92,6 +104,7 @@ const banUser = async (req, res, next) => {
 
     user.status = "Banned";
     user.banReason = req.body.reason;
+    user.tokenVersion += 1;
     await user.save();
 
     res.status(200).json({

@@ -112,11 +112,10 @@ const resendOtp = async (req, res, next) => {
     const { email } = req.body;
     const user = await User.findOne({ where: { email } });
 
-    if (!user) {
-      return next(new CustomError("No account found with this email.", 404));
-    }
-    if (user.isVerified) {
-      return next(new CustomError("Email is already verified.", 400));
+    const genericMessage = "If this email is registered and pending verification, a new verification OTP has been sent.";
+
+    if (!user || user.isVerified) {
+      return res.status(200).json({ message: genericMessage });
     }
     checkOtpCooldown(user);
 
@@ -129,7 +128,7 @@ const resendOtp = async (req, res, next) => {
       return next(new CustomError("Unable to send verification email.", 500));
     }
 
-    res.status(200).json({ message: "A new verification OTP has been sent." });
+    res.status(200).json({ message: genericMessage });
   } catch (error) {
     next(error);
   }
@@ -142,7 +141,7 @@ const verifyOtp = async (req, res, next) => {
     const user = await User.findOne({ where: { email } });
 
     if (!user) {
-      return next(new CustomError("User not found.", 404));
+      return next(new CustomError("Invalid verification code or email.", 400));
     }
     if (user.isVerified) {
       return next(new CustomError("Email is already verified.", 400));
@@ -247,15 +246,10 @@ const requestPasswordResetOtp = async (req, res, next) => {
 
     const user = await findByUsernameOrEmail(usernameOrEmail);
 
-    if (!user) {
-      return next(new CustomError("No account found with these details.", 404));
-    }
-    if (user.status === "Banned") {
-      return bannedResponse(res, user);
-    }
+    const genericMessage = "If an account exists with those details, a password reset OTP has been sent.";
 
-    if (!user.isVerified) {
-      return next(new CustomError("Please verify your email first by completing registration.", 400));
+    if (!user || user.status === "Banned" || !user.isVerified) {
+      return res.status(200).json({ message: genericMessage });
     }
 
     checkPasswordResetLimit(user);
@@ -272,7 +266,7 @@ const requestPasswordResetOtp = async (req, res, next) => {
       return next(new CustomError("Unable to send verification email.", 500));
     }
 
-    res.status(200).json({ message: "A password reset OTP has been sent to your email." });
+    res.status(200).json({ message: genericMessage });
   } catch (error) {
     next(error);
   }
@@ -284,7 +278,7 @@ const resetPassword = async (req, res, next) => {
     const user = await findByUsernameOrEmail(usernameOrEmail);
 
     if (!user) {
-      return next(new CustomError("No account found with these details.", 404));
+      return next(new CustomError("Invalid verification code or details.", 400));
     }
     if (user.status === "Banned") {
       return bannedResponse(res, user);

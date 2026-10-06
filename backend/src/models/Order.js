@@ -27,6 +27,13 @@ const Order = sequelize.define(
       defaultValue: "Pending"
     },
 
+    paymentStatus: {
+      type: DataTypes.ENUM("Pending", "Paid", "Failed", "Refunded"),
+      field: "payment_status",
+      allowNull: false,
+      defaultValue: "Pending"
+    },
+
     shippingAddress: {
       type: DataTypes.TEXT,
       field: "shipping_address",
@@ -36,13 +43,15 @@ const Order = sequelize.define(
     razorpayOrderId: {
       type: DataTypes.STRING(100),
       field: "razorpay_order_id",
-      allowNull: true
+      allowNull: true,
+      unique: true
     },
 
     razorpayPaymentId: {
       type: DataTypes.STRING(100),
       field: "razorpay_payment_id",
-      allowNull: true
+      allowNull: true,
+      unique: true
     },
 
     createdAt: {
@@ -55,7 +64,12 @@ const Order = sequelize.define(
   {
     tableName: "orders",
     timestamps: false,
-    indexes: [{ fields: ["user_id"] }, { fields: ["status"] }]
+    indexes: [
+      { fields: ["user_id"] },
+      { fields: ["status"] },
+      { unique: true, fields: ["razorpay_order_id"] },
+      { unique: true, fields: ["razorpay_payment_id"] }
+    ]
   }
 );
 

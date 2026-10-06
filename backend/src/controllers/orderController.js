@@ -7,7 +7,12 @@ const ORDER_INCLUDE = [{
 }];
 
 const CUSTOMER_CANCELABLE = ["Pending"];
-const ADMIN_TRANSITIONS = { Pending: ["Shipped", "Cancelled"], Shipped: ["Delivered", "Cancelled"], Delivered: [], Cancelled: []};
+const ADMIN_TRANSITIONS = {
+  Pending: ["Shipped", "Cancelled"],
+  Shipped: ["Delivered"],
+  Delivered: [],
+  Cancelled: []
+};
 
 const getMyOrders = async (req, res, next) => {
   try {
