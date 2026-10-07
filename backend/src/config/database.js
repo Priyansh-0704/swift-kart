@@ -10,7 +10,7 @@ const sequelize = new Sequelize(
     dialect: "postgres",
     logging: false,
     define: {
-      underscored: true, // camelCase to snake_case columns
+      // underscored: true,
       timestamps: false
     }
   }

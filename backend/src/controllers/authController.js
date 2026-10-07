@@ -8,8 +8,8 @@ const { getGooglePayload, makeUsername } = require("../utils/googleAuthUtils");
 const bcrypt = require("bcrypt");
 const { Op } = require("sequelize");
 
-const PASSWORD_RESET_LIMIT = 2;
-const PASSWORD_RESET_WINDOW = 24 * 60 * 60 * 1000;
+const PASSWORD_RESET_LIMIT = 2; // per day pass reset limit
+const PASSWORD_RESET_WINDOW = 24 * 60 * 60 * 1000; // window of pass reset curr 24 hr
 
 const bannedResponse = (res, user) => {
   return res.status(403).json({

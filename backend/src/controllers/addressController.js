@@ -7,8 +7,7 @@ const addAddress = async (req, res, next) => {
 
     const address = await UserAddress.create({
       userId: req.user.id,
-      label,
-      fullName, phone,
+      label, fullName, phone,
       addressLine1, addressLine2,
       landmark, city, state, pincode, country
     });
@@ -63,10 +62,7 @@ const updateAddress = async (req, res, next) => {
 
     await address.save();
 
-    res.status(200).json({
-      message: "Address updated successfully.",
-      address
-    });
+    res.status(200).json({message: "Address updated successfully.",address});
   } catch (error) {
     next(error);
   }

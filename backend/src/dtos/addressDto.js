@@ -6,7 +6,7 @@ const addressSchema = Joi.object({
   fullName: Joi.string().min(2).max(50).trim().required(),
 
   phone: Joi.string()
-    .pattern(/^[0-9+\-\s]{7,15}$/)
+    .pattern(/^[0-9+\-\s]{10,15}$/)
     .trim()
     .required()
     .messages({ "string.pattern.base": "Phone number is not valid." }),
