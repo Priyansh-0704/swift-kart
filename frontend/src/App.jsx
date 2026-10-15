@@ -1,153 +1,58 @@
-import { useEffect, useRef, useState } from "react";
+import { Routes, Route } from 'react-router-dom'
+import Navbar from './components/Navbar'
+import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
 
-const API_URL = import.meta.env.VITE_API_URL;
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+import HomePage from './pages/HomePage'
+import ProductsPage from './pages/ProductsPage'
+import ProductDetailPage from './pages/ProductDetailPage'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import VerifyOtpPage from './pages/VerifyOtpPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ProfilePage from './pages/ProfilePage'
+import CartPage from './pages/CartPage'
+import CheckoutPage from './pages/CheckoutPage'
+import AddressesPage from './pages/AddressesPage'
+import OrdersPage from './pages/OrdersPage'
+import OrderDetailPage from './pages/OrderDetailPage'
+import AdminProductsPage from './pages/admin/AdminProductsPage'
+import AdminOrdersPage from './pages/admin/AdminOrdersPage'
+import AdminUsersPage from './pages/admin/AdminUsersPage'
+import NotFoundPage from './pages/NotFoundPage'
 
-function App() {
-  const googleButtonRef = useRef(null);
-  const googleInitialized = useRef(false);
-
-  const [message, setMessage] = useState("");
-  const [profile, setProfile] = useState(null);
-
-  const handleGoogleLogin = async (response) => {
-    try {
-      setMessage("Signing in with Google...");
-
-      console.log("GOOGLE ID TOKEN:", response.credential);
-
-      const result = await fetch(`${API_URL}/auth/google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: response.credential })
-      });
-
-      const data = await result.json();
-
-      if (!result.ok) {
-        setMessage(data.message || "Google login failed.");
-        return;
-      }
-
-      localStorage.setItem("token", data.token);
-      console.log("SWIFTKART JWT:", data.token);
-
-      setMessage(data.message);
-      setProfile(data.user);
-    } catch {
-      setMessage("Could not connect to the backend.");
-    }
-  };
-
-  useEffect(() => {
-    if (googleInitialized.current) {
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-
-    script.onload = () => {
-      if (!window.google || !googleButtonRef.current) {
-        return;
-      }
-
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleLogin
-      });
-
-      window.google.accounts.id.renderButton(googleButtonRef.current, {
-        theme: "outline",
-        size: "large",
-        text: "continue_with",
-        width: 280
-      });
-
-      googleInitialized.current = true;
-    };
-
-    document.body.appendChild(script);
-
-    return () => script.remove();
-  }, []);
-
-  const getProfile = async () => {
-    const token = localStorage.getItem("token");
-
-    if (!token) {
-      setMessage("You are not logged in.");
-      return;
-    }
-
-    try {
-      const response = await fetch(`${API_URL}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setMessage(data.message || "Could not get profile.");
-        return;
-      }
-
-      setProfile(data.user);
-      setMessage("Profile loaded successfully.");
-    } catch {
-      setMessage("Could not connect to the backend.");
-    }
-  };
-
-  const logout = () => {
-    localStorage.removeItem("token");
-
-    if (window.google && window.google.accounts) {
-      window.google.accounts.id.disableAutoSelect();
-    }
-
-    setProfile(null);
-    setMessage("Logged out.");
-  };
-
+export default function App() {
   return (
-    <div className="app">
-      <h1>SwiftKart Authentication</h1>
-      <p>Small frontend only for testing authentication.</p>
-      <div ref={googleButtonRef} style={{ marginTop: "20px" }} />
-      <div style={{ marginTop: "20px" }}>
-        <button onClick={getProfile}>Get Profile</button>
-        <button onClick={logout} style={{ marginLeft: "10px" }}>
-          Logout
-        </button>
-      </div>
+    <>
+      <Navbar />
+      <main>
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<HomePage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:id" element={<ProductDetailPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/verify-otp" element={<VerifyOtpPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-      {message && <p>{message}</p>}
-      {profile && (
-        <div>
-          <h2>User</h2>
-          <p>
-            Name: {profile.name}
-            <br />
-            Email: {profile.email}
-            <br />
-            Username: {profile.username}
-            <br />
-            Role: {profile.role}
-            {profile.hasPassword !== undefined && (
-              <>
-                <br />
-                Has password: {profile.hasPassword ? "Yes" : "No"}
-                <br />
-                Google linked: {profile.googleLinked ? "Yes" : "No"}
-              </>
-            )}
-          </p>
-        </div>
-      )}
-    </div>
-  );
+          {/* Customer Protected (Admins have this too) */}
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
+          <Route path="/addresses" element={<ProtectedRoute><AddressesPage /></ProtectedRoute>} />
+          <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><OrdersPage /></ProtectedRoute>} />
+          <Route path="/orders/:id" element={<ProtectedRoute><OrderDetailPage /></ProtectedRoute>} />
+
+          {/* Admin only */}
+          <Route path="/admin/products" element={<AdminRoute><AdminProductsPage /></AdminRoute>} />
+          <Route path="/admin/orders" element={<AdminRoute><AdminOrdersPage /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute><AdminUsersPage /></AdminRoute>} />
+
+          {/* Fallback */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </main>
+    </>
+  )
 }
-export default App;

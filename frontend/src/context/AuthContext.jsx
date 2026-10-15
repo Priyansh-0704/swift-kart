@@ -61,6 +61,9 @@ export function AuthProvider({ children }) {
     localStorage.setItem("token", newToken);
     setToken(newToken);
     setUser(userData);
+    api.get("/auth/profile")
+      .then((data) => setUser(data.user))
+      .catch(() => { });
   }
 
   return (
